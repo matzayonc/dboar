@@ -14,6 +14,7 @@ function Main(props: Props) {
             <Canvas />
             <input id='exportInput' />
             <input type='file' id='importInput' />
+            <input type='color' id='colorInput' />
         </div>
     )
 }

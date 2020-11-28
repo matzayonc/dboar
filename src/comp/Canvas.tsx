@@ -15,7 +15,7 @@ interface Coords {
 
 interface Line {
     points : Coords[]
-    color? : string
+    color : string
     girth? : number
 }
 
@@ -27,39 +27,49 @@ interface State {
     size: Size
 }
 
+interface Move {
+    offset: Coords
+    prev: Coords
+    active: boolean
+}
 
 
 
 class Canvas extends PureComponent<Props, State> {
-    down: boolean
-    prev: Coords
     lines: Line[]
     ctx: CanvasRenderingContext2D 
-
+    drawing: boolean
+    move: Move
+    offset: Coords
+    activeColor: string
 
     constructor(props: Props) {
         super(props)
 
         this.state = {
-            size: {width: 0, height: 0}
+            size: {width: 0, height: 0},
         }
-        this.down = false
-        this.prev = {x: 0, y: 0}
+        this.activeColor = '000000'
         this.lines = []
-
-
+        this.offset = {x: 0, y: 0}
+        this.drawing = false
+        this.move = { offset: {x: 0, y: 0}, prev: {x: 0, y: 0}, active: false}
     }
 
     
     componentDidMount() {
-        this.ctx = (document.getElementById("canvas") as HTMLCanvasElement).getContext("2d");
+        const canvas = document.getElementById("canvas") as HTMLCanvasElement
+        this.ctx = canvas.getContext("2d");
 
         this.updateWindowDimensions();
-        window.addEventListener('resize', this.updateWindowDimensions.bind(this));
-        window.addEventListener('mousedown', this.mouseDown.bind(this));
-        window.addEventListener('mouseup', this.mouseUp.bind(this));
+        canvas.addEventListener('resize', this.updateWindowDimensions.bind(this));
+        canvas.addEventListener('mousedown', this.mouseDown.bind(this));
+        canvas.addEventListener('mouseup', this.mouseUp.bind(this));
         window.addEventListener('mousemove', this.mouseMove.bind(this));
+        window.addEventListener('contextmenu', e => e.preventDefault())
         document.getElementById('importInput').addEventListener('change', this.upload.bind(this))        
+        document.getElementById('colorInput').addEventListener('change', this.color.bind(this))        
+        
 
     }
 
@@ -73,27 +83,46 @@ class Canvas extends PureComponent<Props, State> {
     }
 
     mouseDown(e: MouseEvent){
-        this.down = true
-        this.prev = {x: e.pageX, y: e.pageY}
-        this.lines.push({points: [{x: e.pageX, y: e.pageY }]})
-
+        if(e.button == 0){
+            this.drawing = true
+            this.lines.push({points: [{x: e.pageX - this.move.offset.x, y: e.pageY - this.move.offset.y}], color: this.activeColor})
+        }
+        else
+            this.move = {offset: this.move.offset , prev: {x: e.pageX, y: e.pageY }, active: true}
     }
 
     mouseUp(e: MouseEvent){
-        this.down = false
-        console.log(this.prev)
+        e.preventDefault()
+
+        this.drawing = false
+        this.move.active = false
     }
       
     mouseMove(e: MouseEvent){
-        if(!this.down) return
+        if(e.buttons == 1){
+            if(!this.drawing) return
 
+            let prev = this.lines[this.lines.length-1].points[this.lines[this.lines.length-1].points.length -1]
+            this.lines[this.lines.length-1].points.push({x: e.pageX - this.move.offset.x, y: e.pageY - this.move.offset.y})
 
-        let prev = this.lines[this.lines.length-1].points[this.lines[this.lines.length-1].points.length -1]
-        this.lines[this.lines.length-1].points.push({x: e.pageX, y: e.pageY})
+            this.ctx.beginPath()
+            this.ctx.moveTo(prev.x + this.move.offset.x, prev.y + this.move.offset.y)
+            this.ctx.lineTo(e.pageX, e.pageY)
+            this.ctx.strokeStyle = '#' + this.activeColor
+            this.ctx.stroke(); 
+        }
+        else if(e.buttons == 2){
+            if(!this.move.active) return           
 
-        this.ctx.moveTo(prev.x, prev.y)
-        this.ctx.lineTo(e.pageX, e.pageY)
-        this.ctx.stroke(); 
+            this.move.offset.x += e.pageX - this.move.prev.x
+            this.move.offset.y += e.pageY - this.move.prev.y
+
+            this.move.prev = {x: e.pageX, y: e.pageY }
+
+            this.canvasRerender()
+
+        }
+
 
     }
 
@@ -118,15 +147,22 @@ class Canvas extends PureComponent<Props, State> {
     }
 
     canvasRerender(){
+        this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
         for(let line of this.lines){
-            this.ctx.moveTo(line.points[0].x, line.points[0].y)
+            const off = this.move.offset
+            this.ctx.beginPath()
+
+            this.ctx.moveTo(line.points[0].x + off.x, line.points[0].y + off.y)
 
             for(let point of line.points){
 
-                this.ctx.lineTo(point.x, point.y)
+                this.ctx.lineTo(point.x + off.x, point.y + off.y)
+                this.ctx.strokeStyle = '#' + line.color
+                this.ctx.stroke()
+
             }
         }
-        this.ctx.stroke()
     }
 
     exportToClipboard(){
@@ -155,6 +191,13 @@ class Canvas extends PureComponent<Props, State> {
         document.getElementById('importInput').click()   
     }
 
+    changeColor(){
+        document.getElementById('colorInput').click()
+    }
+
+    color(e: InputEvent){
+        this.activeColor = (e.target as HTMLInputElement).value.split('#')[1]
+    }
 
 
     
@@ -167,6 +210,7 @@ class Canvas extends PureComponent<Props, State> {
                     {callback: () => console.log('A'), fallback: 'A'},
                     {callback: () => this.export(), fallback: 'Exp'},
                     {callback: () => this.import(), fallback: 'Imp'},
+                    {callback: () => this.changeColor(), fallback: 'Col'},
                 ]}></Menu>
             </div>
         )
