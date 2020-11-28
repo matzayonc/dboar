@@ -1,7 +1,3 @@
-import React, { PureComponent, ReactNode } from 'react'
-
-import Menu from './Menu'
-
 
 interface Size {
     width: number
@@ -19,14 +15,6 @@ interface Line {
     girth? : number
 }
 
-
-interface Props {}
-
-
-interface State {
-    size: Size
-}
-
 interface Move {
     offset: Coords
     prev: Coords
@@ -35,7 +23,7 @@ interface Move {
 
 
 
-class Canvas extends PureComponent<Props, State> {
+class Canvas{
     lines: Line[]
     ctx: CanvasRenderingContext2D 
     drawing: boolean
@@ -43,28 +31,26 @@ class Canvas extends PureComponent<Props, State> {
     offset: Coords
     activeColor: string
 
-    constructor(props: Props) {
-        super(props)
+    constructor() {
 
-        this.state = {
-            size: {width: 0, height: 0},
-        }
         this.activeColor = '000000'
         this.lines = []
         this.offset = {x: 0, y: 0}
         this.drawing = false
         this.move = { offset: {x: 0, y: 0}, prev: {x: 0, y: 0}, active: false}
+        
+        this.mount()
     }
 
     
-    componentDidMount() {
+    mount() {
         const canvas = document.getElementById("canvas") as HTMLCanvasElement
         this.ctx = canvas.getContext("2d");
 
-        this.updateWindowDimensions();
-        canvas.addEventListener('resize', this.updateWindowDimensions.bind(this));
+        this.resize();
         canvas.addEventListener('mousedown', this.mouseDown.bind(this));
         canvas.addEventListener('mouseup', this.mouseUp.bind(this));
+        window.addEventListener('resize', this.resize.bind(this));
         window.addEventListener('mousemove', this.mouseMove.bind(this));
         window.addEventListener('contextmenu', e => e.preventDefault())
         document.getElementById('importInput').addEventListener('change', this.upload.bind(this))        
@@ -72,13 +58,12 @@ class Canvas extends PureComponent<Props, State> {
         
 
     }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.updateWindowDimensions.bind(this));
-    }
       
-    updateWindowDimensions() {
-        this.setState({ size: { width: window.innerWidth, height: window.innerHeight }});
+    resize() {
+        console.log('resize')
+        const canvas = document.getElementById("canvas") as HTMLCanvasElement
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
         this.canvasRerender()
     }
 
@@ -120,10 +105,7 @@ class Canvas extends PureComponent<Props, State> {
             this.move.prev = {x: e.pageX, y: e.pageY }
 
             this.canvasRerender()
-
         }
-
-
     }
 
     upload(e: Event){
@@ -201,8 +183,8 @@ class Canvas extends PureComponent<Props, State> {
 
 
     
-    render(): ReactNode {
-
+    render() {
+/*
         return (
             <div>
                 <canvas id="canvas" width={this.state.size.width} height={this.state.size.height} />
@@ -214,7 +196,7 @@ class Canvas extends PureComponent<Props, State> {
                 ]}></Menu>
             </div>
         )
-
+*/
     }
 }
 

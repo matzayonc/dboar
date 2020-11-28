@@ -1,14 +1,16 @@
-import * as React from "react";
-
 import './style/main.sass'
 
-import Main from './comp/Main';
+import Canvas from './comp/Canvas';
 
 
-export interface AppProps {
 
+
+class App {
+	canvas: Canvas
+	
+	constructor(){
+		this.canvas = new Canvas()
+	}
 }
 
-export const App = (props: AppProps) => (
-	<Main/>
-)
+export default App
