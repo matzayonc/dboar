@@ -1,7 +1,5 @@
 import React from 'react'
 
-import './Menu.sass'
-
 
 interface Option {
     callback: () => any
@@ -18,13 +16,13 @@ function Menu(props: Props) {
 
 
     return (
-        <div className="container">
+        <div className="menu-container">
 
             {options.map((i: Option, key: number) => {
                 return (
-                    <div key={'menuL'+key} className="element" onClick={
+                    <div key={'menuL'+key} className="menu-element" onClick={
                         (e: React.MouseEvent<HTMLElement>) => {
-                            e.preventDefault()
+                            e.stopPropagation()
                             i.callback()                            
                         }
                     }>

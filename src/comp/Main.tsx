@@ -3,6 +3,8 @@ import React from 'react'
 import Canvas from './Canvas'
 import Menu from './Menu'
 
+import '../style/main.sass'
+
 interface Props {}
 
 
@@ -13,7 +15,7 @@ function Main(props: Props) {
         <div>
             <Canvas />
             <input id='exportInput' />
-            importFile
+            <input type='file' id='importInput' />
         </div>
     )
 }

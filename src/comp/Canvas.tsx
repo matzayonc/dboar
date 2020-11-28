@@ -1,12 +1,6 @@
 import React, { PureComponent, ReactNode } from 'react'
-import { Prompt } from 'react-router'
-import { isThisTypeNode, isThrowStatement } from 'typescript'
-
-import './Canvas.sass'
 
 import Menu from './Menu'
-
-
 
 
 interface Size {
@@ -65,6 +59,8 @@ class Canvas extends PureComponent<Props, State> {
         window.addEventListener('mousedown', this.mouseDown.bind(this));
         window.addEventListener('mouseup', this.mouseUp.bind(this));
         window.addEventListener('mousemove', this.mouseMove.bind(this));
+        document.getElementById('importInput').addEventListener('change', this.upload.bind(this))        
+
     }
 
     componentWillUnmount() {
@@ -101,6 +97,26 @@ class Canvas extends PureComponent<Props, State> {
 
     }
 
+    upload(e: Event){
+        let filer = document.getElementById('importInput') as HTMLInputElement
+        let file = filer.files[0]
+
+        if(!file) return
+
+        const reader = new FileReader();
+
+        reader.readAsText(file, "UTF-8");
+    
+        reader.onerror = e => console.error(e)
+        reader.onload = (e :any) => {
+            this.lines = []
+            this.canvasRerender()
+            this.lines = JSON.parse(e.target.result)
+            this.canvasRerender()
+        
+        }
+    }
+
     canvasRerender(){
         for(let line of this.lines){
             this.ctx.moveTo(line.points[0].x, line.points[0].y)
@@ -135,40 +151,8 @@ class Canvas extends PureComponent<Props, State> {
         document.body.removeChild(el);
     }
 
-    import(){
-        /*
-        async import(){
-            let imported = await this.readFile()
-            this.save()
-            this.loadFrom(JSON.parse(imported))
-            this.future = []
-        }*/
-    
-        let inp = document.createElement('input') as HTMLInputElement
-        inp.setAttribute('type', 'file')
-        inp.click()
-
-        
-        const change = (e:Event) => {
-            let file = inp.files[0];
-            if(file){
-                const reader = new FileReader();
-
-                reader.readAsText(file, "UTF-8");
-            
-                reader.onerror = e => console.error(e)
-                reader.onload = (e :any) => {
-                    this.lines = []
-                    this.canvasRerender()
-                    this.lines = JSON.parse(e.target.result)
-                    this.canvasRerender()
-                }
-            }
-            inp.removeEventListener('change', change)
-
-        }
-
-        inp.addEventListener('change', change)        
+    import(){  
+        document.getElementById('importInput').click()   
     }
 
 
