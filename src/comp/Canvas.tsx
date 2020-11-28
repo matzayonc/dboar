@@ -15,7 +15,7 @@ interface Coords {
 
 interface Line {
     points : Coords[]
-    color? : string
+    color : string
     girth? : number
 }
 
@@ -25,7 +25,6 @@ interface Props {}
 
 interface State {
     size: Size
-    color: 
 }
 
 interface Move {
@@ -42,14 +41,15 @@ class Canvas extends PureComponent<Props, State> {
     drawing: boolean
     move: Move
     offset: Coords
+    activeColor: string
 
     constructor(props: Props) {
         super(props)
 
         this.state = {
             size: {width: 0, height: 0},
-            color: '#000000'
         }
+        this.activeColor = '000000'
         this.lines = []
         this.offset = {x: 0, y: 0}
         this.drawing = false
@@ -85,7 +85,7 @@ class Canvas extends PureComponent<Props, State> {
     mouseDown(e: MouseEvent){
         if(e.button == 0){
             this.drawing = true
-            this.lines.push({points: [{x: e.pageX - this.move.offset.x, y: e.pageY - this.move.offset.y}]})
+            this.lines.push({points: [{x: e.pageX - this.move.offset.x, y: e.pageY - this.move.offset.y}], color: this.activeColor})
         }
         else
             this.move = {offset: this.move.offset , prev: {x: e.pageX, y: e.pageY }, active: true}
@@ -108,6 +108,7 @@ class Canvas extends PureComponent<Props, State> {
             this.ctx.beginPath()
             this.ctx.moveTo(prev.x + this.move.offset.x, prev.y + this.move.offset.y)
             this.ctx.lineTo(e.pageX, e.pageY)
+            this.ctx.strokeStyle = '#' + this.activeColor
             this.ctx.stroke(); 
         }
         else if(e.buttons == 2){
@@ -148,18 +149,20 @@ class Canvas extends PureComponent<Props, State> {
     canvasRerender(){
         this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-        this.ctx.beginPath()
         for(let line of this.lines){
             const off = this.move.offset
-            
+            this.ctx.beginPath()
+
             this.ctx.moveTo(line.points[0].x + off.x, line.points[0].y + off.y)
 
             for(let point of line.points){
 
                 this.ctx.lineTo(point.x + off.x, point.y + off.y)
+                this.ctx.strokeStyle = '#' + line.color
+                this.ctx.stroke()
+
             }
         }
-        this.ctx.stroke()
     }
 
     exportToClipboard(){
@@ -188,8 +191,12 @@ class Canvas extends PureComponent<Props, State> {
         document.getElementById('importInput').click()   
     }
 
-    color(){
+    changeColor(){
         document.getElementById('colorInput').click()
+    }
+
+    color(e: InputEvent){
+        this.activeColor = (e.target as HTMLInputElement).value.split('#')[1]
     }
 
 
@@ -203,7 +210,7 @@ class Canvas extends PureComponent<Props, State> {
                     {callback: () => console.log('A'), fallback: 'A'},
                     {callback: () => this.export(), fallback: 'Exp'},
                     {callback: () => this.import(), fallback: 'Imp'},
-                    {callback: () => this.color(), fallback: 'Col'},
+                    {callback: () => this.changeColor(), fallback: 'Col'},
                 ]}></Menu>
             </div>
         )
