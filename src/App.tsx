@@ -1,8 +1,8 @@
 import * as React from "react";
 
-import './style.sass'
+import './style/main.sass'
 
-import Canvas from './comp/Canvas';
+import Main from './comp/Main';
 
 
 export interface AppProps {
@@ -10,5 +10,5 @@ export interface AppProps {
 }
 
 export const App = (props: AppProps) => (
-	<Canvas/>
+	<Main/>
 )
