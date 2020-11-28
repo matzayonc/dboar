@@ -135,6 +135,42 @@ class Canvas extends PureComponent<Props, State> {
         document.body.removeChild(el);
     }
 
+    import(){
+        /*
+        async import(){
+            let imported = await this.readFile()
+            this.save()
+            this.loadFrom(JSON.parse(imported))
+            this.future = []
+        }*/
+    
+        let inp = document.createElement('input') as HTMLInputElement
+        inp.setAttribute('type', 'file')
+        inp.click()
+
+        
+        const change = (e:Event) => {
+            let file = inp.files[0];
+            if(file){
+                const reader = new FileReader();
+
+                reader.readAsText(file, "UTF-8");
+            
+                reader.onerror = e => console.error(e)
+                reader.onload = (e :any) => {
+                    this.lines = []
+                    this.canvasRerender()
+                    this.lines = JSON.parse(e.target.result)
+                    this.canvasRerender()
+                }
+            }
+            inp.removeEventListener('change', change)
+
+        }
+
+        inp.addEventListener('change', change)        
+    }
+
 
 
     
@@ -146,7 +182,7 @@ class Canvas extends PureComponent<Props, State> {
                 <Menu options={[
                     {callback: () => console.log('A'), fallback: 'A'},
                     {callback: () => this.export(), fallback: 'Exp'},
-                    {callback: () => alert(JSON.stringify(this.lines)), fallback: 'Imp'},
+                    {callback: () => this.import(), fallback: 'Imp'},
                 ]}></Menu>
             </div>
         )

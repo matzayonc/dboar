@@ -13,6 +13,7 @@ function Main(props: Props) {
         <div>
             <Canvas />
             <input id='exportInput' />
+            importFile
         </div>
     )
 }
