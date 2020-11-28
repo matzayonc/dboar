@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import './style.sass'
+import './style/main.sass'
 
 import Main from './comp/Main';
 

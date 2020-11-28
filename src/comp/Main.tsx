@@ -3,8 +3,6 @@ import React from 'react'
 import Canvas from './Canvas'
 import Menu from './Menu'
 
-import '../style/main.sass'
-
 interface Props {}
 
 
