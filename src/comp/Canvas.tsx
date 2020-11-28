@@ -1,4 +1,5 @@
 import React, { PureComponent, ReactNode } from 'react'
+import { Prompt } from 'react-router'
 import { isThisTypeNode, isThrowStatement } from 'typescript'
 
 import './Canvas.sass'
@@ -24,9 +25,8 @@ interface Line {
     girth? : number
 }
 
-interface Props {
-    exportJSON: (data: string) => void
-}
+
+interface Props {}
 
 
 interface State {
@@ -113,7 +113,7 @@ class Canvas extends PureComponent<Props, State> {
         this.ctx.stroke()
     }
 
-    export(){
+    exportToClipboard(){
 
         let inp = document.createElement('input')
         document.body.appendChild(inp)
@@ -124,10 +124,31 @@ class Canvas extends PureComponent<Props, State> {
 
     }
 
+    export(){
+        let el = document.createElement('a')
+        el.setAttribute('href', 'data:text/plain;charset=utf-8,' + JSON.stringify(this.lines));
+        el.setAttribute('download', 'exported.json');
+
+        el.style.display = 'none';
+        document.body.appendChild(el);    
+        el.click();    
+        document.body.removeChild(el);
+    }
+
+
+
+    
     render(): ReactNode {
 
         return (
-            <canvas id="canvas" width={this.state.size.width} height={this.state.size.height} />
+            <div>
+                <canvas id="canvas" width={this.state.size.width} height={this.state.size.height} />
+                <Menu options={[
+                    {callback: () => console.log('A'), fallback: 'A'},
+                    {callback: () => this.export(), fallback: 'Exp'},
+                    {callback: () => alert(JSON.stringify(this.lines)), fallback: 'Imp'},
+                ]}></Menu>
+            </div>
         )
 
     }
