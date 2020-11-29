@@ -1,4 +1,6 @@
 import * as request from 'superagent'
+const C2S = require('canvas2svg')
+
 const server = 'http://localhost:3000'
 
 interface Size {
@@ -32,6 +34,7 @@ class Canvas{
     move: Move
     offset: Coords
     activeColor: string
+    size: Coords
 
     constructor() {
 
@@ -42,8 +45,60 @@ class Canvas{
         this.move = { offset: {x: 0, y: 0}, prev: {x: 0, y: 0}, active: false}
         
         this.mount()
-        this.get()
+        //this.get()
+        this.test()
     }
+
+    test(){
+        let ctx = new C2S(this.size.x, this.size.y)
+        ctx.fillStyle="red";
+        ctx.fillRect(100,200,100,200);
+        let svg = ctx.getSerializedSvg()
+        console.log(svg)
+        this.drawSvgString(ctx.getSerializedSvg())
+
+
+    }
+
+    dataToSvg(){
+
+        let ctx = new C2S(this.size.x, this.size.y)
+
+
+        for(let line of this.lines){
+            const off = this.move.offset
+            ctx.beginPath()
+
+            ctx.moveTo(line.points[0].x + off.x, line.points[0].y + off.y)
+
+            for(let point of line.points){
+                ctx.lineTo(point.x + off.x, point.y + off.y)
+                ctx.strokeStyle = '#' + line.color
+                ctx.stroke()
+            }
+        }
+
+
+
+        let svg = ctx.getSerializedSvg()
+        console.log(svg)
+
+        return svg
+    }
+
+    drawSvgString(svg: string){
+        let blob = new Blob([svg], {type: 'image/svg+xml'});
+        let url = URL.createObjectURL(blob);
+        let image = document.createElement('img');
+        image.src = url;
+        image.addEventListener('load', () => {
+            URL.revokeObjectURL(url)
+            console.log(image)
+            this.ctx.drawImage(image, 0, 0)
+        }, {once: true});
+    }
+
+
 
     get(){
         request.get(server + '/tab/a')
@@ -60,7 +115,7 @@ class Canvas{
         request.post(server + '/tab/a')
             .set('Content-Type', 'application/json')
             .send(JSON.stringify(this.lines))
-            .then((res) => console.log(res))
+            .then((res) => {})
             .catch(err => console.error(err))
     }
 
@@ -78,14 +133,23 @@ class Canvas{
         document.getElementById('importInput').addEventListener('change', this.upload.bind(this))        
         document.getElementById('colorInput').addEventListener('change', this.color.bind(this))        
         
+        this.buttons()
+    }
 
+    buttons(){
+        document.getElementById('exportButton').addEventListener('click', () => this.export())
+        document.getElementById('importButton').addEventListener('click', () => this.import())
+        document.getElementById('SVGButton').addEventListener('click', () => this.dataToSvg())
+        document.getElementById('colorButton').addEventListener('click', () => this.changeColor())
+        document.getElementById('syncButton').addEventListener('click', () => this.post())
     }
       
     resize() {
         console.log('resize')
         const canvas = document.getElementById("canvas") as HTMLCanvasElement
-        canvas.width = window.innerWidth
-        canvas.height = window.innerHeight
+        this.size = {x: window.innerWidth, y: window.innerHeight}
+        canvas.width = this.size.x
+        canvas.height =this.size.y
         this.canvasRerender()
     }
 
@@ -101,10 +165,12 @@ class Canvas{
     mouseUp(e: MouseEvent){
         e.preventDefault()
 
+        if(this.drawing) this.post()
+
+
         this.drawing = false
         this.move.active = false
 
-        this.post()
     }
       
     mouseMove(e: MouseEvent){
@@ -153,22 +219,22 @@ class Canvas{
     }
 
     canvasRerender(){
-        this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        this.ctx.clearRect(0, 0, this.size.x, this.size.y)
+        this.ctx.translate(this.move.offset.x, this.move.offset.y)
 
         for(let line of this.lines){
-            const off = this.move.offset
             this.ctx.beginPath()
 
-            this.ctx.moveTo(line.points[0].x + off.x, line.points[0].y + off.y)
+            this.ctx.moveTo(line.points[0].x, line.points[0].y)
 
             for(let point of line.points){
-
-                this.ctx.lineTo(point.x + off.x, point.y + off.y)
+                this.ctx.lineTo(point.x, point.y)
                 this.ctx.strokeStyle = '#' + line.color
                 this.ctx.stroke()
-
             }
         }
+        this.ctx.translate(-this.move.offset.x, -this.move.offset.y)
+
     }
 
     exportToClipboard(){
