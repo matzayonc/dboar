@@ -1,3 +1,5 @@
+import * as request from 'superagent'
+const server = 'http://localhost:3000'
 
 interface Size {
     width: number
@@ -40,6 +42,26 @@ class Canvas{
         this.move = { offset: {x: 0, y: 0}, prev: {x: 0, y: 0}, active: false}
         
         this.mount()
+        this.get()
+    }
+
+    get(){
+        request.get(server + '/tab/a')
+            .set('accept', 'json')
+            .end((err, res) => {
+                const data = JSON.parse(res.text)
+                console.log(data)
+                this.lines = data
+                this.canvasRerender()
+            })
+    }
+
+    post(){
+        request.post(server + '/tab/a')
+            .set('Content-Type', 'application/json')
+            .send(JSON.stringify(this.lines))
+            .then((res) => console.log(res))
+            .catch(err => console.error(err))
     }
 
     
@@ -81,6 +103,8 @@ class Canvas{
 
         this.drawing = false
         this.move.active = false
+
+        this.post()
     }
       
     mouseMove(e: MouseEvent){
@@ -182,22 +206,6 @@ class Canvas{
     }
 
 
-    
-    render() {
-/*
-        return (
-            <div>
-                <canvas id="canvas" width={this.state.size.width} height={this.state.size.height} />
-                <Menu options={[
-                    {callback: () => console.log('A'), fallback: 'A'},
-                    {callback: () => this.export(), fallback: 'Exp'},
-                    {callback: () => this.import(), fallback: 'Imp'},
-                    {callback: () => this.changeColor(), fallback: 'Col'},
-                ]}></Menu>
-            </div>
-        )
-*/
-    }
 }
 
 export default Canvas
