@@ -32,21 +32,24 @@ class Canvas{
     ctx: CanvasRenderingContext2D 
     drawing: boolean
     move: Move
-    offset: Coords
     activeColor: string
     size: Coords
+    svg: string
 
     constructor() {
 
         this.activeColor = '000000'
         this.lines = []
-        this.offset = {x: 0, y: 0}
         this.drawing = false
         this.move = { offset: {x: 0, y: 0}, prev: {x: 0, y: 0}, active: false}
+        this.size = {x: window.innerWidth, y: window.innerHeight}
+        this.svg = (new C2S(this.size.x, this.size.y)).getSerializedSvg()
+
         
         this.mount()
         //this.get()
         this.test()
+
     }
 
     test(){
@@ -77,9 +80,7 @@ class Canvas{
                 ctx.stroke()
             }
         }
-
-
-
+        
         let svg = ctx.getSerializedSvg()
         console.log(svg)
 
@@ -94,11 +95,16 @@ class Canvas{
         image.addEventListener('load', () => {
             URL.revokeObjectURL(url)
             console.log(image)
-            this.ctx.drawImage(image, 0, 0)
+            this.ctx.drawImage(image, this.move.offset.x, this.move.offset.y)
         }, {once: true});
     }
 
-
+    SVGinize(){
+        this.svg = this.dataToSvg()
+        this.lines = []
+        this.canvasRerender()
+        this.drawSvgString(this.svg)
+    }
 
     get(){
         request.get(server + '/tab/a')
@@ -139,7 +145,7 @@ class Canvas{
     buttons(){
         document.getElementById('exportButton').addEventListener('click', () => this.export())
         document.getElementById('importButton').addEventListener('click', () => this.import())
-        document.getElementById('SVGButton').addEventListener('click', () => this.dataToSvg())
+        document.getElementById('SVGButton').addEventListener('click', () => this.SVGinize())
         document.getElementById('colorButton').addEventListener('click', () => this.changeColor())
         document.getElementById('syncButton').addEventListener('click', () => this.post())
     }
@@ -233,6 +239,11 @@ class Canvas{
                 this.ctx.stroke()
             }
         }
+
+        this.drawSvgString(this.svg)
+
+
+
         this.ctx.translate(-this.move.offset.x, -this.move.offset.y)
 
     }
